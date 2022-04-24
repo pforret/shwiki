@@ -49,9 +49,11 @@ flag|q|quiet|no output
 flag|v|verbose|output more
 flag|f|force|do not ask for confirmation (always yes)
 option|l|log_dir|folder for log files |$HOME/log/$script_prefix
-option|t|tmp_dir|folder for temp files|/tmp/$script_prefix
-choice|1|action|action to perform|action1,action2,check,env,update
-#param|?|input|input file/text
+option|t|tmp_dir|folder for temp files|$script_install_folder/.tmp
+option|w|width|max line width|100
+option|p|paragraphs|stop after N paragraphs|1
+choice|1|action|action to perform|search,action2,check,env,update
+param|?|input|search term
 " | grep -v '^#' | grep -v '^\s*$'
 }
 
@@ -64,10 +66,12 @@ main() {
 
   action=$(lower_case "$action")
   case $action in
-  action1)
-    #TIP: use «$script_prefix action1» to ...
-    #TIP:> $script_prefix action1
-    do_action1
+  search|query)
+    #TIP: use «$script_prefix search» to lookup a topic in Wikipedia
+    #TIP:> $script_prefix search
+    api_search_wikipedia "$input" '.query.pages | .[].extract'
+    # https://stackoverflow.com/questions/13807137/get-first-paragraph-and-only-text-of-a-wikipedia-article-returns-not-desired-r
+    # https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext=1&titles=Unix
     ;;
 
   action2)
@@ -105,20 +109,50 @@ main() {
 ## Put your helper scripts here
 #####################################################################
 
-do_action1() {
-  log_to_file "action1"
-  # Examples of required binaries/scripts and how to install them
-  # require_binary "ffmpeg"
-  # require_binary "convert" "imagemagick"
-  # require_binary "progressbar" "basher install pforret/progressbar"
-  # (code)
+function api_search_wikipedia(){
+  # $1 = search term
+  # https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext=1&titles=Unix
+  local url
+  url="https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext=1&titles=$1"
+  call_api_cached "$url" "${2:-.}" \
+  | awk '{ gsub(/"/,""); gsub(/\\n/,"\n"); print }' \
+  | head -"$paragraphs" \
+  | grep -v '^null$' \
+  | awk '{print $0 "\n"}' \
+  | awk '{gsub(/\. /,".\n"); print;}' \
+  | fold -s -w "$width"
 }
 
-do_action2() {
-  log_to_file "action2"
-  # (code)
-
+function parse_domain(){
+  echo "$1" | sed -e 's|^[^/]*//||' -e 's|/.*$||'
 }
+
+function call_api_cached() {
+  # $1 = URL
+  # $2 = jq query path
+  require_binary jq
+  local uniq
+  local domain
+  local full_url="$1"
+  uniq=$(<<< "$full_url" hash 8)
+  # shellcheck disable=SC2154
+  domain=$(parse_domain "$url")
+  local cached="$tmp_dir/$domain.$uniq.json"
+  if [[ ! -f "$cached" ]]; then
+    debug "API Call = [$full_url]"
+    curl -s "$full_url" > "$cached"
+    if [[ $(wc <"$cached" -c) -lt 10 ]]; then
+      # remove if response is too small to be a valid answer
+      rm "$cached"
+      alert "API call to [$full_url] came back with empty response"
+      return 1
+    fi
+  else
+    debug "API cache = [$cached]"
+  fi
+  < "$cached" jq "${2:-.}"
+}
+
 
 #####################################################################
 ################### DO NOT MODIFY BELOW THIS LINE ###################
