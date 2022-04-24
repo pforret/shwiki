@@ -25,3 +25,15 @@ test_usage_shows_option_verbose() {
   assert_equals 1 "$("$root_script" 2>&1 | grep -c "Usage")"
   assert_equals 1 "$("$root_script" 2>&1 | grep -c "verbose")"
 }
+
+test_wikipedia_basic() {
+  assert_equals 1 "$("$root_script" search London 2>&1 | head -1 | grep -c "England")"
+}
+
+test_wikipedia_cleanup() {
+  assert_equals 0 "$("$root_script" -c search Botswana 2>&1 | grep -c "(")"
+}
+
+test_wikipedia_sentence() {
+  assert_equals 1 "$("$root_script" -w 500 -s 1 search Botswana 2>&1 | wc -l | xargs)"
+}
