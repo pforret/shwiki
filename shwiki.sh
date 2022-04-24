@@ -47,11 +47,13 @@ list_options() {
 flag|h|help|show usage
 flag|q|quiet|no output
 flag|v|verbose|output more
+flag|c|cleanup|cleanup Wikipedia text
 flag|f|force|do not ask for confirmation (always yes)
 option|l|log_dir|folder for log files |$HOME/log/$script_prefix
 option|t|tmp_dir|folder for temp files|$script_install_folder/.tmp
 option|w|width|max line width|100
 option|p|paragraphs|stop after N paragraphs|1
+option|s|sentences|stop after N sentences|10
 choice|1|action|action to perform|search,action2,check,env,update
 param|?|input|search term
 " | grep -v '^#' | grep -v '^\s*$'
@@ -114,12 +116,26 @@ function api_search_wikipedia(){
   # https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext=1&titles=Unix
   local url
   url="https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext=1&titles=$1"
+  # shellcheck disable=SC2154
   call_api_cached "$url" "${2:-.}" \
-  | awk '{ gsub(/"/,""); gsub(/\\n/,"\n"); print }' \
+  | awk '{ gsub(/\\n/,"\n"); print }' \
   | head -"$paragraphs" \
   | grep -v '^null$' \
+  | if ((cleanup)) ; then
+      awk '{
+        gsub(/"/,"");
+        gsub(/(\([^\(\)]+\))/,"");
+        gsub(/(\([^\(\)]+\))/,"");
+        gsub(/\)/,"");
+        gsub(/ , /,", ");
+        print;
+      }'
+    else
+      cat
+    fi \
   | awk '{print $0 "\n"}' \
   | awk '{gsub(/\. /,".\n"); print;}' \
+  | head -"$sentences" \
   | fold -s -w "$width"
 }
 
