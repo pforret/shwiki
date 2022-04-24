@@ -4,7 +4,7 @@
 ![GH stars](https://img.shields.io/github/stars/pforret/shwiki)
 ![GH tag](https://img.shields.io/github/v/tag/pforret/shwiki)
 ![GH License](https://img.shields.io/github/license/pforret/shwiki)
-[![basher install](https://img.shields.io/badge/basher-install-white?logo=gnu-bash&style=flat)](https://basher.gitparade.com/package/)
+[![basher install](https://img.shields.io/badge/basher-install-white?logo=gnu-bash&style=flat)](https://www.basher.it/package/)
 
 # shwiki
 
