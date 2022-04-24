@@ -10,6 +10,8 @@
 
 Wikipedia CLI in bash
 
+![](assets/unsplash.encyclopedia.jpg)
+
 ## 🔥 Usage
 
 ```
