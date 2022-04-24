@@ -115,7 +115,7 @@ function api_search_wikipedia(){
   # $1 = search term
   # https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext=1&titles=Unix
   local url
-  url="https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext=1&titles=$1"
+  url="https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext=1&titles=${1// /+}"
   # shellcheck disable=SC2154
   call_api_cached "$url" "${2:-.}" \
   | awk '{ gsub(/\\n/,"\n"); print }' \
