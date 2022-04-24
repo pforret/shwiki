@@ -71,6 +71,7 @@ main() {
   search|query)
     #TIP: use «$script_prefix search» to lookup a topic in Wikipedia
     #TIP:> $script_prefix search
+    # shellcheck disable=SC2154
     api_search_wikipedia "$input" '.query.pages | .[].extract'
     # https://stackoverflow.com/questions/13807137/get-first-paragraph-and-only-text-of-a-wikipedia-article-returns-not-desired-r
     # https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext=1&titles=Unix
@@ -154,6 +155,7 @@ function call_api_cached() {
   uniq=$(<<< "$full_url" hash 8)
   # shellcheck disable=SC2154
   domain=$(parse_domain "$url")
+  # shellcheck disable=SC2154
   local cached="$tmp_dir/$domain.$uniq.json"
   if [[ ! -f "$cached" ]]; then
     debug "API Call = [$full_url]"
