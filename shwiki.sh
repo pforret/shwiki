@@ -128,6 +128,7 @@ function api_search_wikipedia(){
         gsub(/(\([^\(\)]+\))/,"");
         gsub(/\)/,"");
         gsub(/ , /,", ");
+        gsub(/\\/,"");
         print;
       }'
     else
